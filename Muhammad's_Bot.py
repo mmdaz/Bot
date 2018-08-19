@@ -1,5 +1,4 @@
 from time import sleep
-
 import requests
 
 url = "https://api.telegram.org/bot699267489:AAFNulySbda5Ik9FKtHzLGpaUzwOim6Ut3k/"
@@ -28,6 +27,9 @@ def get_user_name(update):
     user_specifications = update['message']['from']['username']
     return user_specifications
 
+def get_firstname(update):
+    first_name = update['message']['form']['first_name']
+    return first_name
 
 def main():
 
@@ -35,21 +37,19 @@ def main():
 
     while True:
 
-        print(update_id)
-        print(last_update(get_updates_json(url))['update_id'])
-        print(get_user_name(last_update(get_updates_json(url))))
-        if get_user_name(last_update(get_updates_json(url))) == 'mhmd_azhdari' and update_id == last_update(get_updates_json(url))['update_id']:
+        if  get_user_name(last_update(get_updates_json(url))) == 'mhmd_azhdari' and int(update_id) == int(last_update(get_updates_json(url))['update_id']):
             send_mess(get_chat_id(last_update(get_updates_json(url))), 'hello muhammad')
             print("salam")
             update_id = str(int(update_id) + 1)
-        elif get_user_name(last_update(get_updates_json(url))) == 'Maryamsf19' and update_id == last_update(get_updates_json(url))['update_id']:
-            send_mess(get_chat_id(last_update(get_updates_json(url))), 'Developer of this bot loves you')
+        elif get_user_name(last_update(get_updates_json(url))) == 'Maryamsf19' and int(update_id) == int(last_update(get_updates_json(url))['update_id']):
+            send_mess(get_chat_id(last_update(get_updates_json(url))), 'Developer of this bot loves YOU :)')
+            print("salam")
             update_id = str(int(update_id) + 1)
-        elif update_id == last_update(get_updates_json(url))['update_id']:
-            send_mess(get_chat_id(last_update(get_updates_json(url))), 'Hello')
+        elif int(update_id) == int(last_update(get_updates_json(url))['update_id']):
+            send_mess(get_chat_id(last_update(get_updates_json(url))), 'Hello' + get_firstname(last_update(get_updates_json(url))) )
+            print("salam")
             update_id = str(int(update_id) + 1)
-
-        sleep(3)
+        sleep(1)
 
 if __name__ == '__main__':
     main()
