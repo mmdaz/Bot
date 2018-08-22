@@ -1,8 +1,17 @@
+"""
+This is simple telegram bot and is my personal practice project to learn bot and network development .
+"""
+
 from time import sleep
 import requests
 
+# The token of the bot :
 url = "https://api.telegram.org/bot699267489:AAFNulySbda5Ik9FKtHzLGpaUzwOim6Ut3k/"
 
+"""
+Send request to telegram and get updates by getUpdate method .
+
+"""
 def get_updates_json(request):
     response = requests.get(request + 'getUpdates')
     return response.json()
@@ -39,10 +48,6 @@ def main():
 
         if  get_user_name(last_update(get_updates_json(url))) == 'mhmd_azhdari' and int(update_id) == int(last_update(get_updates_json(url))['update_id']):
             send_mess(get_chat_id(last_update(get_updates_json(url))), 'hello muhammad')
-            print("salam")
-            update_id = str(int(update_id) + 1)
-        elif get_user_name(last_update(get_updates_json(url))) == 'Maryamsf19' and int(update_id) == int(last_update(get_updates_json(url))['update_id']):
-            send_mess(get_chat_id(last_update(get_updates_json(url))), 'Developer of this bot loves YOU :)')
             print("salam")
             update_id = str(int(update_id) + 1)
         elif int(update_id) == int(last_update(get_updates_json(url))['update_id']):
