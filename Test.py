@@ -9,7 +9,9 @@ from Person import Person
 # for p in db.search(person):
 #     print(p.first_name)
 
-p = Person("muhammad", "azhdari", 20)
+p = Person('muhammad', 'azhdari', 20)
 db = DataBase()
 # db.insert_person(p)
 db.show_all_database()
+for p in db.search(Person("muhammad", "azhdari", 20 )):
+    print(p.first_name)

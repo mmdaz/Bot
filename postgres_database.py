@@ -36,11 +36,11 @@ class DataBase:
     def search(self, person):
         result=[]
         all_data_base = []
-        self.cursor.execute("SELECT * FROM PERSON")
+        data = (person.first_name, person.last_name, str(person.age))
+        self.cursor.execute("SELECT * FROM PERSON WHERE FIRST_NAME = (%s) AND LAST_NAME = (%s) AND AGE = (%s)" , data)
         all_data_base = self.cursor.fetchall()
 
         for row in all_data_base:
-            if person.first_name == row[0] or person.last_name == row[1] or person.age == row[2]:
-                result.append(Person(row[0], row[1], row[2]))
+            result.append(Person(row[0], row[1], row[2]))
 
         return result
