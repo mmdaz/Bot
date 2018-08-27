@@ -15,8 +15,7 @@ dispatcher = updater.dispatcher
 
 db = DataBase()
 
-ms = TextMessage("salam")
-print(ms.text)
+
 person = Person("", "", 0)
 
 
@@ -37,7 +36,7 @@ def conversation_starter(bot, update):
     dispatcher.set_conversation_data(update=update, key="my_data", value="my_value")
     dispatcher.register_conversation_next_step_handler(update, MessageHandler(TextFilter(), ask_name))
 
-
+# TODO handle that if command_handler not accepted the method do not run ...
 @dispatcher.message_handler(filters=TextFilter())
 @dispatcher.command_handler(["talk"])
 def ask_name(bot, update):
@@ -75,13 +74,7 @@ def ask_age(bot, update):
     db.insert_person(person)
 
 
-# @dispatcher.command_handler(["search"])
-# def search_conversation_start(bot, update):
-#     message = TextMessage("hi , nice to meet you :)\nplease tell me your first name : ")
-#     user_peer = update.get_effective_user()
-#     bot.send_message(message, user_peer, success_callback=success, failure_callback=failure)
-#     dispatcher.set_conversation_data(update=update, key="my_data", value="my_value")
-#     dispatcher.register_conversation_next_step_handler(update, MessageHandler(TextFilter(), ask_name))
-#
+# TODO create search conversation but I try to mix this with top methods and do not copy and past code :)
+
 
 updater.run()
