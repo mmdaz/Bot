@@ -1,12 +1,10 @@
 import asyncio
 from balebot.handlers import *
 from balebot.filters import *
-from balebot.models.base_models import Peer
 from balebot.models.messages import *
 from balebot.updater import Updater
-from balebot.config import Config
-from Person import Person
-from postgres_database import DataBase
+from PersonInformationBot.Person import Person
+from PersonInformationBot.postgres_database import DataBase
 
 # Config.real_time_fetch_updates=True
 

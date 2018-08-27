@@ -1,5 +1,5 @@
 import MySQLdb
-from Person import Person
+from PersonInformationBot.Person import Person
 
 
 class DataBase:

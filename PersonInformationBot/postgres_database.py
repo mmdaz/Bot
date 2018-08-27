@@ -1,5 +1,5 @@
 import psycopg2
-from Person import Person
+from PersonInformationBot.Person import Person
 
 class DataBase:
     db = None

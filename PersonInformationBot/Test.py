@@ -1,5 +1,5 @@
-from postgres_database import DataBase
-from Person import Person
+from PersonInformationBot.postgres_database import DataBase
+from PersonInformationBot.Person import Person
 
 # db = DataBase()
 # # person = Person("erfan", "erfani", 20)
