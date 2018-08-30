@@ -9,7 +9,7 @@ class Alarm:
         self.photo = str(photo)
         self.message = str(message)
         self.stop_message = str(stop_message)
-        self.start_time = start_time
+        self.start_time = str(start_time)
         self.repeat_period = str(repeat_period)
         self.activation_status = bool(activation_satatus)
 

@@ -5,6 +5,7 @@ from balebot.models.messages import *
 from balebot.updater import Updater
 from Alarm_bot.Alarm import Alarm
 import datetime , jdatetime
+from Alarm_bot.database_operations import save_alarm
 
 # global variables :
 
@@ -23,7 +24,7 @@ def failure(result):
     print("failure : ", result)
 
 
-# for test
+# Temp Alarm for sending data to databse and save it
 alarm = Alarm("", "","","","","",5,False)
 
 # p = PhotoMessage()
@@ -34,8 +35,8 @@ alarm = Alarm("", "","","","","",5,False)
 
 def create_time(year, month, day, hour, minute):
     time_string = "{}-{}-{} {}:{}:0.0".format(year, month, day, hour, minute)
-    return jdatetime.datetime.strptime(time_string, "%Y-%m-%d %H:%M:%S.%f")
-
+    time_string_for_save = "{}:{}:{}:{}:{}".format(year, month, day,hour, minute)
+    return time_string_for_save
 # Get Start Alarm Information Conversation :
 
 @dispatcher.command_handler(["/create_alarm"])
@@ -64,13 +65,23 @@ def get_alarm_name(bot, update):
 
 
 def get_alarm_message(bot, update):
-    message = TextMessage("یک عکس برای هشدار ارسال نمایید :")
+    message = TextMessage("لطفا یک پیام را برای متوقف کردن هشدار ارسال نمایید (یعنی اگر شما آن پیام را ارسال نمایید آن هشدار متوقف خوهاد شد)")
     user_peer = update.get_effective_user()
     alarm_message = update.get_effective_message()
     alarm.message = alarm_message.text
     bot.send_message(message, user_peer, success_callback=success, failure_callback=failure)
     dispatcher.set_conversation_data(update=update, key="my_data", value="my_value")
+    dispatcher.register_conversation_next_step_handler(update, MessageHandler(TextFilter(), get_alarm_stop_message))
+
+def get_alarm_stop_message(bot, update):
+    message = TextMessage("یک عکس برای هشدار ارسال نمایید :")
+    user_peer = update.get_effective_user()
+    alarm_stop_message = update.get_effective_message()
+    alarm.stop_message = alarm_stop_message.text
+    bot.send_message(message, user_peer, success_callback=success, failure_callback=failure)
+    dispatcher.set_conversation_data(update=update, key="my_data", value="my_value")
     dispatcher.register_conversation_next_step_handler(update, MessageHandler(PhotoFilter(), get_alarm_photo))
+
 
 def get_alarm_photo(bot, update):
     # TODO check if message is not a photo message
@@ -157,6 +168,7 @@ def finish_creating_alarm(bot, update):
     user_peer = update.get_effective_user()
     period = update.get_effective_message()
     alarm.repeat_period = period.text
+    save_alarm(alarm)
     bot.send_message(message, user_peer, success_callback=success, failure_callback=failure)
     dispatcher.finish_conversation(update)
 
