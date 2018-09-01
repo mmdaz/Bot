@@ -7,8 +7,6 @@ engine = create_engine('postgresql://muhammad:1540487768@localhost/AlarmsAndDebt
 
 _SessionFactory = sessionmaker(bind=engine)
 
-# session = _SessionFactory()
-
 Base = declarative_base()
 
 def session_factory():

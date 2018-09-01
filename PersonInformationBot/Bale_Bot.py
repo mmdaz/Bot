@@ -1,7 +1,4 @@
 import asyncio
-from balebot.handlers import *
-from balebot.filters import *
-from balebot.models.messages import *
 from balebot.updater import Updater
 from PersonInformationBot.Person import Person
 from PersonInformationBot.postgres_database import DataBase

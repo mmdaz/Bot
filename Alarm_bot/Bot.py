@@ -1,20 +1,23 @@
 import asyncio
-from balebot.handlers import *
-from balebot.filters import *
-from balebot.models.messages import *
+
+from balebot.filters import TextFilter, PhotoFilter
+from balebot.handlers import MessageHandler
+from balebot.models.messages import TextMessage
 from balebot.updater import Updater
-from Alarm_bot.Alarm import Alarm
-import datetime , jdatetime
-from Alarm_bot.database_operations import save_alarm
+from Alarm_bot.alarm import Alarm
+from Alarm_bot.debt import Debt
+from Alarm_bot.template_messages import Message
+from balebot.models.base_models import Peer
+import jdatetime
+from Alarm_bot.database_operations import save_alarm, search_alarm_for_send
 
 # global variables :
 
 updater =  Updater(token="63d52735b75ff858191152a038d746b956ef950e", loop=asyncio.get_event_loop())
 dispatcher = updater.dispatcher
-year, month, day, hour, minute = "", "", "", "", ""
-invalid_input_message = TextMessage("ورودی اشتباه است ... لطفا دوباره وارد کنید ")
-
-
+debt_year, debt_month, debt_day = "", "", ""
+alarm = Alarm("", "", "", "", "", "", 5, "")
+debt = Debt("", "", "", "", "", "")
 
 def success(result):
     print("success : ", result)
@@ -25,10 +28,13 @@ def failure(result):
 
 
 # Temp Alarm for sending data to databse and save it
-alarm = Alarm("", "","","","","",5,False)
 
-# p = PhotoMessage()
 
+# p = Peer()
+async def send_alarm():
+    while(True):
+        print("salam")
+        await asyncio.sleep(6)
 
 
 
@@ -39,140 +45,197 @@ def create_time(year, month, day, hour, minute):
     return time_string_for_save
 # Get Start Alarm Information Conversation :
 
-@dispatcher.command_handler(["/create_alarm"])
+@dispatcher.command_handler("/create_alarm")
 def start_creating_alarm(bot, update):
-    message = TextMessage("سلام و وقت بخیر :) لطفا نام هشدار را وارد نمایید :")
+    alarm = Alarm("", "", "", "", "", "", 5, "")
+    dispatcher.set_conversation_data(update, "alarm", alarm)
     user_peer = update.get_effective_user()
-    alarm.user_id = user_peer.peer_id
+    alarm.user_id = user_peer.get_json_str()
     command = update.get_effective_message()
-    bot.send_message(message, user_peer, success_callback=success, failure_callback=failure)
+    bot.send_message(Message.GET_ALARM_NAME, user_peer, success_callback=success, failure_callback=failure)
     dispatcher.set_conversation_data(update=update, key="alarm_key", value="alarm_value")
     dispatcher.register_conversation_next_step_handler(update, MessageHandler(TextFilter(), get_alarm_name))
 
 
 def get_alarm_name(bot, update):
-
-    # TODO check that name should not be repetitive .
-
-    message= TextMessage("لطفا پیام هشدار را وارد کنید :")
     user_peer = update.get_effective_user()
     alarm_name = update.get_effective_message()
-    alarm.name = alarm_name.text
+    dispatcher.get_conversation_data(update, "alarm").name = alarm_name.text
     # print(alarm_name.text)
-    bot.send_message(message, user_peer, success_callback=success, failure_callback=failure)
+    bot.send_message(Message.GET_ALARM_MESSAGE, user_peer, success_callback=success, failure_callback=failure)
     dispatcher.set_conversation_data(update=update, key="my_data", value="my_value")
     dispatcher.register_conversation_next_step_handler(update, MessageHandler(TextFilter(), get_alarm_message))
 
 
 def get_alarm_message(bot, update):
-    message = TextMessage("لطفا یک پیام را برای متوقف کردن هشدار ارسال نمایید (یعنی اگر شما آن پیام را ارسال نمایید آن هشدار متوقف خوهاد شد)")
     user_peer = update.get_effective_user()
     alarm_message = update.get_effective_message()
-    alarm.message = alarm_message.text
-    bot.send_message(message, user_peer, success_callback=success, failure_callback=failure)
+    dispatcher.get_conversation_data(update, "alarm").message = alarm_message.text
+    bot.send_message(Message.GET_ALARM_STOP_MESSAGE, user_peer, success_callback=success, failure_callback=failure)
     dispatcher.set_conversation_data(update=update, key="my_data", value="my_value")
     dispatcher.register_conversation_next_step_handler(update, MessageHandler(TextFilter(), get_alarm_stop_message))
 
 def get_alarm_stop_message(bot, update):
-    message = TextMessage("یک عکس برای هشدار ارسال نمایید :")
+    # TODO check repetition of this field .
     user_peer = update.get_effective_user()
     alarm_stop_message = update.get_effective_message()
-    alarm.stop_message = alarm_stop_message.text
-    bot.send_message(message, user_peer, success_callback=success, failure_callback=failure)
+    dispatcher.get_conversation_data(update, "alarm").stop_message = alarm_stop_message.text
+    bot.send_message(Message.GET_ALARM_PHOTO, user_peer, success_callback=success, failure_callback=failure)
     dispatcher.set_conversation_data(update=update, key="my_data", value="my_value")
     dispatcher.register_conversation_next_step_handler(update, MessageHandler(PhotoFilter(), get_alarm_photo))
 
 
 def get_alarm_photo(bot, update):
     # TODO check if message is not a photo message
-    message = TextMessage("زمان هشدار : لطفا سال هشدار را وارد نمایید : برای مثال : ‌1397")
     photo = update.get_effective_message()
-    alarm.photo = photo.get_json_str()
+    dispatcher.get_conversation_data(update, "alarm").photo = photo.get_json_str()
     user_peer = update.get_effective_user()
-    bot.send_message(message, user_peer, success_callback=success, failure_callback=failure)
+    bot.send_message(Message.GET_ALARM_YEAR, user_peer, success_callback=success, failure_callback=failure)
     dispatcher.set_conversation_data(update=update, key="my_data", value="my_value")
     dispatcher.register_conversation_next_step_handler(update, MessageHandler(TextFilter(), get_date_year))
 
 
 def get_date_year(bot, update):
-    message = TextMessage("لطفا ماه هشدار را وارد نمایید : ")
-    global year
     user_peer = update.get_effective_user()
     year = update.get_effective_message().text
+    dispatcher.set_conversation_data(update, "year",year )
     if int(year) < 1397:
-        bot.send_message(invalid_input_message, user_peer, success_callback=success, failure_callback=failure)
+        bot.send_message(Message.INVALID_INPUT, user_peer, success_callback=success, failure_callback=failure)
         dispatcher.register_conversation_next_step_handler(update, MessageHandler(TextFilter(), get_date_year))
     else:
-        bot.send_message(message, user_peer, success_callback=success, failure_callback=failure)
+        bot.send_message(Message.GET_ALARM_MONTH, user_peer, success_callback=success, failure_callback=failure)
         dispatcher.set_conversation_data(update=update, key="my_data", value="my_value")
         dispatcher.register_conversation_next_step_handler(update, MessageHandler(TextFilter(), get_date_month))
 
+
+
 def get_date_month(bot, update):
-    message = TextMessage("لطفا روز هشدار را وارد نمایید : ")
-    global month
     month = update.get_effective_message().text
+    dispatcher.set_conversation_data(update, "month", month)
     user_peer = update.get_effective_user()
     if not (0 < int(month) < 13):
-        bot.send_message(invalid_input_message, user_peer, success_callback=success, failure_callback=failure)
+        bot.send_message(Message.INVALID_INPUT, user_peer, success_callback=success, failure_callback=failure)
         dispatcher.register_conversation_next_step_handler(update, MessageHandler(TextFilter(), get_date_month))
     else:
-        bot.send_message(message, user_peer, success_callback=success, failure_callback=failure)
+        bot.send_message(Message.GET_ALARM_DAY, user_peer, success_callback=success, failure_callback=failure)
         dispatcher.set_conversation_data(update=update, key="my_data", value="my_value")
         dispatcher.register_conversation_next_step_handler(update, MessageHandler(TextFilter(), get_date_day))
 
 
 def get_date_day(bot, update):
-    message = TextMessage("لطفا ساعت هشدار را وارد نمایید :")
-    global day
     day = update.get_effective_message().text
+    dispatcher.set_conversation_data(update, "day", day)
     user_peer = update.get_effective_user()
-    if not ((0 < int(day) < 32 and 0 < int(month) < 7) or (0 < int(day) < 31 and 6 < int(month) < 13)) :
-        bot.send_message(invalid_input_message, user_peer, success_callback=success, failure_callback=failure)
+    if not ((0 < int(day) < 32 and 0 < int(dispatcher.get_conversation_data(update, "month")) < 7) or (0 < int(day) < 31 and 6 < int(dispatcher.get_conversation_data(update, "month")) < 13)) :
+        bot.send_message(Message.INVALID_INPUT, user_peer, success_callback=success, failure_callback=failure)
         dispatcher.register_conversation_next_step_handler(update, MessageHandler(TextFilter(), get_date_day))
     else:
-        bot.send_message(message, user_peer, success_callback=success, failure_callback=failure)
+        bot.send_message(Message.GET_ALARM_HOUR, user_peer, success_callback=success, failure_callback=failure)
         dispatcher.set_conversation_data(update=update, key="my_data", value="my_value")
         dispatcher.register_conversation_next_step_handler(update, MessageHandler(TextFilter(), get_date_hour))
 
 
 def get_date_hour(bot, update):
-    message = TextMessage("لطفا دقیقه هشدار را وارد نمایید :")
-    global hour
     hour = update.get_effective_message().text
+    dispatcher.set_conversation_data(update, "hour", hour)
     user_peer = update.get_effective_user()
     if not 0 <= int(hour) < 24:
-        bot.send_message(invalid_input_message, user_peer, success_callback=success, failure_callback=failure)
+        bot.send_message(Message.INVALID_INPUT, user_peer, success_callback=success, failure_callback=failure)
         dispatcher.register_conversation_next_step_handler(update, MessageHandler(TextFilter(), get_date_hour))
     else:
-        bot.send_message(message, user_peer, success_callback=success, failure_callback=failure)
+        bot.send_message(Message.GET_ALARM_MINUTE, user_peer, success_callback=success, failure_callback=failure)
         dispatcher.set_conversation_data(update=update, key="my_data", value="my_value")
         dispatcher.register_conversation_next_step_handler(update, MessageHandler(TextFilter(), get_date_minute))
 
 
 def get_date_minute(bot, update):
-    message = TextMessage("لطفا زمان تکرار هشدار را وارد نمایید (هشدار چند دقیقه یک بار تکرار شود ؟)")
-    global minute
     minute = update.get_effective_message().text
+    dispatcher.set_conversation_data(update, "minute", minute)
     user_peer = update.get_effective_user()
-    if not 0 < int(minute) < 60:
-        bot.send_message(invalid_input_message, user_peer, success_callback=success, failure_callback=failure)
+    if not 0 <= int(minute) < 60:
+        bot.send_message(Message.INVALID_INPUT, user_peer, success_callback=success, failure_callback=failure)
         dispatcher.register_conversation_next_step_handler(update, MessageHandler(TextFilter(), get_date_minute))
     else:
         # print(create_time(year, month, day, hour, minute))
-        alarm.start_time = create_time(year, month, day, hour, minute)
-        bot.send_message(message, user_peer, success_callback=success, failure_callback=failure)
+        dispatcher.get_conversation_data(update, "alarm").start_time = create_time(dispatcher.get_conversation_data(update, "year"), dispatcher.get_conversation_data(update, "month"),
+                                       dispatcher.get_conversation_data(update, "day"), dispatcher.get_conversation_data(update, "hour"),
+                                       dispatcher.get_conversation_data(update, "minute"))
+        bot.send_message(Message.GET_ALARM_REPETITION_PERIOD, user_peer, success_callback=success, failure_callback=failure)
         dispatcher.register_conversation_next_step_handler(update, MessageHandler(TextFilter(), finish_creating_alarm))
 
 def finish_creating_alarm(bot, update):
-    message = TextMessage("هشدار با موفقیت ساخته شد ... :)")
     user_peer = update.get_effective_user()
     period = update.get_effective_message()
-    alarm.repeat_period = period.text
+    dispatcher.get_conversation_data(update, "alarm").repeat_period = period.text
     save_alarm(alarm)
-    bot.send_message(message, user_peer, success_callback=success, failure_callback=failure)
+    bot.send_message(Message.ALARM_CREATION_SUCCESS, user_peer, success_callback=success, failure_callback=failure)
+    dispatcher.finish_conversation(update)
+
+#
+# @dispatcher.message_handler(TextFilter())
+# def check_stop_message(bot, update):
+#     user_peer = update.get_effective_user()
+#     input = update.get_effective_message()
+
+
+
+@dispatcher.command_handler("/add_debt")
+def start_get_debt_conversation(bot, update):
+    user_peer = update.get_effective_user()
+    debt.user_id = user_peer.get_json_str()
+    bot.send_message(Message.GET_DEBT_AMOUNT, user_peer, success_callback=success, failure_callback=failure)
+    dispatcher.register_conversation_next_step_handler(update, MessageHandler(TextFilter(), get_amount))
+
+
+def get_amount(bot, update):
+    user_peer = update.get_effective_user()
+    amount = update.get_effective_message()
+    debt.amount = amount.text
+    bot.send_message(Message.GET_DEBT_CARD_NUMBER, user_peer, success_callback=success, failure_callback=failure)
+    dispatcher.register_conversation_next_step_handler(update, MessageHandler(TextFilter(), get_card_number))
+
+
+def get_card_number(bot, update):
+    user_peer = update.get_effective_user()
+    card_number = update.get_effective_message()
+    debt.card_number = card_number
+    bot.send_message(Message.GET_CREDITOR_NAME, user_peer, success_callback=success, failure_callback=failure)
+    dispatcher.register_conversation_next_step_handler(update, MessageHandler(TextFilter(), get_name_creditor))
+
+
+def get_name_creditor(bot, update):
+    user_peer = update.get_effective_user()
+    creditor_name = update.get_effective_message()
+    debt.creditor_name = creditor_name
+    bot.send_message(Message.GET_DEBT_YEAR, user_peer, success_callback=success, failure_callback=failure)
+    dispatcher.register_conversation_next_step_handler(update, MessageHandler(TextFilter(), get_date_year))
+
+
+def get_date_year(bot, update):
+    user_peer = update.get_effective_user()
+    global debt_year
+    debt_year = update.get_effective_message()
+    bot.send_message(Message.GET_DEBT_MONTH, user_peer, success_callback=success, failure_callback=failure)
+    dispatcher.register_conversation_next_step_handler(update, MessageHandler(TextFilter(), get_date_month))
+
+
+def get_date_month(bot,update):
+    user_peer = update.get_effective_user()
+    global debt_month
+    debt_month = update.get_effective_message()
+    bot.send_message(Message.GET_DEBT_DAY, user_peer, success_callback=success, failure_callback=failure)
+    dispatcher.register_conversation_next_step_handler(update, MessageHandler(TextFilter(), get_date_day))
+
+
+def get_date_day(bot, update):
+    user_peer = update.get_effective_user()
+    global debt_day
+    debt_day = update.get_effective_message()
+    debt.date("{}:{}:{}".format(debt_year, debt_month, debt_day))
+    print(debt.user_id)
+    bot.send_message(Message.DEBT_CREATION_SECCESS, user_peer, success_callback=success, failure_callback=failure)
     dispatcher.finish_conversation(update)
 
 
-
-
+asyncio.ensure_future(send_alarm())
 updater.run()
