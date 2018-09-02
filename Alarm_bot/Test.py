@@ -1,5 +1,6 @@
 from Alarm_bot.database_operations import *
 import time
+import jdatetime
 from Alarm_bot.template_messages import Message
 
 # date = jdatetime.datetime.now()
@@ -25,10 +26,11 @@ def t2():
         time.sleep(2)
 
 # a = get_all_alarms()[0]
-# print(get_all_alarms()[1])
+# print(get_all_alarms()[2])
 # delete_alarm(a)
 # a = Alarm.Alarm()
 
 # print(search_alarm_for_send(jdatetime.datetime(1397, 6, 9, 23, 1 )))
+a = get_all_alarms()[0]
 
-print(Message.ALARM_CREATION_SUCCESS.text)
+print(check_stop_message_repetition(a.user_id, "stop-messag"))

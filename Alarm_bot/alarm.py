@@ -11,7 +11,7 @@ class Alarm:
         self.stop_message = str(stop_message)
         self.start_time = str(start_time)
         self.repeat_period = str(repeat_period)
-        self.activation_status = bool(activation_satatus)
+        self.activation_status = str(activation_satatus)
 
 
     def start_alarm(self):
