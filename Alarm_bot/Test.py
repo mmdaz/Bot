@@ -33,4 +33,5 @@ def t2():
 # print(search_alarm_for_send(jdatetime.datetime(1397, 6, 9, 23, 1 )))
 a = get_all_alarms()[0]
 
-print(check_stop_message_repetition(a.user_id, "stop-messag"))
+update_alarm_activation(a.user_id, a.stop_message)
+

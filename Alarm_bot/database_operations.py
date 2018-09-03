@@ -1,6 +1,7 @@
 from Alarm_bot.DataBase import Alarm, Debt
 from Alarm_bot.base import session_factory
 import jdatetime
+from balebot.models.messages import TextMessage
 
 def save_alarm(alarm_from_bot):
     session = session_factory()
@@ -20,6 +21,7 @@ def save_debt(debt_from_bot):
 def get_all_alarms():
     session = session_factory()
     alarm_query = session.query(Alarm)
+    session.expire_on_commit = False
     session.close()
     return alarm_query.all()
 
@@ -73,13 +75,17 @@ def update_alarm_time(alarm):
 def update_alarm_activation(user_id, stop_message):
     session = session_factory()
     target_alarm = session.query(Alarm).filter_by(user_id=user_id, stop_message=stop_message).first()
+    session = session.object_session(target_alarm)
+    deactive_message = TextMessage("هشدار {} متوقف شد .".format(target_alarm.name))
     if target_alarm.activation_status == "true":
         target_alarm.activation_status = False
-    else:
-        target_alarm.activation_status = True
+        session.commit()
+        session.close()
 
-    session.commit()
-    session.close()
+    return deactive_message
+
+
+
 
 
 def check_stop_message_repetition(user_id, stop_message):

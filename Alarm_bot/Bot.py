@@ -9,14 +9,12 @@ from Alarm_bot.debt import Debt
 from Alarm_bot.template_messages import Message
 from balebot.models.base_models import Peer
 import jdatetime
-from Alarm_bot.database_operations import save_alarm, search_alarm_for_send, get_all_alarms, update_alarm_time, search_stop_message, update_alarm_activation, check_stop_message_repetition
+from Alarm_bot.database_operations import save_alarm, search_alarm_for_send, update_alarm_time, search_stop_message, update_alarm_activation, check_stop_message_repetition
 
 # global variables :
 
 updater =  Updater(token="63d52735b75ff858191152a038d746b956ef950e", loop=asyncio.get_event_loop())
 dispatcher = updater.dispatcher
-debt_year, debt_month, debt_day = "", "", ""
-debt = Debt("", "", "", "", "", "")
 
 
 
@@ -28,19 +26,20 @@ def failure(result):
     print("failure : ", result)
 
 
-# Temp Alarm for sending data to databse and save it
 
 
-# p = Peer()
 async def send_alarm(bot = dispatcher.bot):
     while(True):
         current_time = jdatetime.datetime.now()
         for alarm in search_alarm_for_send(current_time):
             user_peer = Peer.load_from_json(alarm.user_id)
             update_alarm_time(alarm)
-            message = PhotoMessage.load_from_json(alarm.photo)
-            message.caption_text = alarm.message
-            bot.send_message(message, user_peer, success_callback=success, failure_callback=failure)
+            photo = PhotoMessage.load_from_json(alarm.photo_json)
+            # TODO add caption to photo :|||
+            # photo.caption_text = alarm.message
+            caption = TextMessage(alarm.message)
+            bot.send_message(photo, user_peer, success_callback=success, failure_callback=failure)
+            bot.send_message(caption, user_peer, success_callback=success, failure_callback=failure)
         await asyncio.sleep(30)
 
 
@@ -50,6 +49,8 @@ def create_time(year, month, day, hour, minute):
     time_string = "{}-{}-{} {}:{}:0.0".format(year, month, day, hour, minute)
     time_string_for_save = "{}:{}:{}:{}:{}".format(year, month, day,hour, minute)
     return time_string_for_save
+
+
 # Get Start Alarm Information Conversation :
 
 @dispatcher.command_handler("/create_alarm")
@@ -67,7 +68,6 @@ def get_alarm_name(bot, update):
     user_peer = update.get_effective_user()
     alarm_name = update.get_effective_message()
     dispatcher.get_conversation_data(update, "alarm").name = alarm_name.text
-    # print(alarm_name.text)
     bot.send_message(Message.GET_ALARM_MESSAGE, user_peer, success_callback=success, failure_callback=failure)
     dispatcher.set_conversation_data(update=update, key="my_data", value="my_value")
     dispatcher.register_conversation_next_step_handler(update, MessageHandler(TextFilter(), get_alarm_message))
@@ -81,12 +81,11 @@ def get_alarm_message(bot, update):
     dispatcher.register_conversation_next_step_handler(update, MessageHandler(TextFilter(), get_alarm_stop_message))
 
 def get_alarm_stop_message(bot, update):
-    # TODO check repetition of this field .
     user_peer = update.get_effective_user()
     alarm_stop_message = update.get_effective_message()
     if check_stop_message_repetition(user_peer.get_json_str(), alarm_stop_message.text):
         bot.send_message(Message.STOP_MESSAGE_REPETIOTION, user_peer, success_callback=success, failure_callback=failure)
-        dispatcher.register_conversation_next_step_handler(update, MessageHandler(PhotoFilter(), get_alarm_stop_message))
+        dispatcher.register_conversation_next_step_handler(update, MessageHandler(TextFilter(), get_alarm_stop_message))
     else:
         dispatcher.get_conversation_data(update, "alarm").stop_message = alarm_stop_message.text
         bot.send_message(Message.GET_ALARM_PHOTO, user_peer, success_callback=success, failure_callback=failure)
@@ -94,7 +93,6 @@ def get_alarm_stop_message(bot, update):
 
 
 def get_alarm_photo(bot, update):
-    # TODO check if message is not a photo message .
     photo = update.get_effective_message()
     dispatcher.get_conversation_data(update, "alarm").photo = photo.get_json_str()
     user_peer = update.get_effective_user()
@@ -185,6 +183,8 @@ def finish_creating_alarm(bot, update):
 @dispatcher.command_handler("/add_debt")
 def start_get_debt_conversation(bot, update):
     user_peer = update.get_effective_user()
+    debt = Debt("", "", "", "", "", "")
+    dispatcher.set_conversation_data(update, "debt", debt)
     debt.user_id = user_peer.get_json_str()
     bot.send_message(Message.GET_DEBT_AMOUNT, user_peer, success_callback=success, failure_callback=failure)
     dispatcher.register_conversation_next_step_handler(update, MessageHandler(TextFilter(), get_amount))
@@ -193,7 +193,7 @@ def start_get_debt_conversation(bot, update):
 def get_amount(bot, update):
     user_peer = update.get_effective_user()
     amount = update.get_effective_message()
-    debt.amount = amount.text
+    dispatcher.get_conversation_data(update, "debt").amount = amount.text
     bot.send_message(Message.GET_DEBT_CARD_NUMBER, user_peer, success_callback=success, failure_callback=failure)
     dispatcher.register_conversation_next_step_handler(update, MessageHandler(TextFilter(), get_card_number))
 
@@ -201,7 +201,7 @@ def get_amount(bot, update):
 def get_card_number(bot, update):
     user_peer = update.get_effective_user()
     card_number = update.get_effective_message()
-    debt.card_number = card_number
+    dispatcher.get_conversation_data(update, "debt").card_number = card_number
     bot.send_message(Message.GET_CREDITOR_NAME, user_peer, success_callback=success, failure_callback=failure)
     dispatcher.register_conversation_next_step_handler(update, MessageHandler(TextFilter(), get_name_creditor))
 
@@ -209,33 +209,34 @@ def get_card_number(bot, update):
 def get_name_creditor(bot, update):
     user_peer = update.get_effective_user()
     creditor_name = update.get_effective_message()
-    debt.creditor_name = creditor_name
+    dispatcher.get_conversation_data(update, "debt").creditor_name = creditor_name
     bot.send_message(Message.GET_DEBT_YEAR, user_peer, success_callback=success, failure_callback=failure)
     dispatcher.register_conversation_next_step_handler(update, MessageHandler(TextFilter(), get_debt_date_year))
 
 
 def get_debt_date_year(bot, update):
     user_peer = update.get_effective_user()
-    global debt_year
     debt_year = update.get_effective_message()
+    dispatcher.set_conversation_data(update, "debt_year", debt_year)
     bot.send_message(Message.GET_DEBT_MONTH, user_peer, success_callback=success, failure_callback=failure)
     dispatcher.register_conversation_next_step_handler(update, MessageHandler(TextFilter(), get_debt_date_month))
 
 
 def get_debt_date_month(bot,update):
     user_peer = update.get_effective_user()
-    global debt_month
     debt_month = update.get_effective_message()
+    dispatcher.set_conversation_data(update, "debt_month", debt_month)
     bot.send_message(Message.GET_DEBT_DAY, user_peer, success_callback=success, failure_callback=failure)
     dispatcher.register_conversation_next_step_handler(update, MessageHandler(TextFilter(), get_debt_date_day))
 
 
 def get_debt_date_day(bot, update):
     user_peer = update.get_effective_user()
-    global debt_day
     debt_day = update.get_effective_message()
-    debt.date("{}:{}:{}".format(debt_year, debt_month, debt_day))
-    print(debt.user_id)
+    dispatcher.set_conversation_data(update, "dept_day", debt_day)
+    dispatcher.get_conversation_data(update, "debt").date("{}:{}:{}".format(dispatcher.get_conversation_data(update, "debt_year"), dispatcher.get_conversation_data(update, "debt_month"),
+                                                                            dispatcher.get_conversation_data(update, "debt_day")))
+    print(dispatcher.get_conversation_data(update, "debt").user_id)
     bot.send_message(Message.DEBT_CREATION_SECCESS, user_peer, success_callback=success, failure_callback=failure)
     dispatcher.finish_conversation(update)
 
@@ -244,8 +245,7 @@ def check_stop_message(bot, update):
     user_peer = update.get_effective_user()
     input = update.get_effective_message()
     if search_stop_message(user_peer.get_json_str(), input.text):
-        update_alarm_activation(user_peer.get_json_str(), input.text)
-
+        bot.send_message(update_alarm_activation(user_peer.get_json_str(), input.text), user_peer, success_callback=success, failure_callback=failure )
 
 
 
