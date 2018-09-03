@@ -44,6 +44,7 @@ class Alarm(Base):
 class Debt(Base):
     __tablename__ = 'debts'
     id = Column(Integer, primary_key=True)
+    photo_id = Column(Integer)
     user_id = Column(String)
     creditor_name = Column(String)
     card_number = Column(String)
@@ -59,9 +60,45 @@ class Debt(Base):
         self.creditor_name = debt.creditor_name
         self.amount = debt.amount
         self.payment_status = debt.payment_status
-
+        self.photo_id = debt.photo_id
 
     def __repr__(self):
-        return "<Debt(card-number='%s', creditor-name='%s', amount='%s', date='%s', payment-status='%s', user-id='%s' )>" % (
-            self.card_number, self.creditor_name, self.amount, self.date, self.payment_status, self.user_id
+        return "<Debt(card-number='%s', creditor-name='%s', amount='%s', date='%s', payment-status='%s', user-id='%s', photo_id='%d' )>" % (
+            self.card_number, self.creditor_name, self.amount, self.date, self.payment_status, self.user_id , self.photo_id
         )
+
+class Photo(Base):
+    __tablename__ = 'photos'
+    id = Column(Integer, primary_key=True)
+    file_id = Column(String)
+    access_hash = Column(String)
+    name = Column(String)
+    file_size = Column(String)
+    mime_type = Column(String)
+    thumb = Column(String)
+    width = Column(Integer)
+    height = Column(Integer)
+    ext_width = Column(Integer)
+    ext_height = Column(Integer)
+    file_storage_version = Column(Integer)
+    caption_text = Column(String)
+    checksum = Column(String)
+    algorithm = Column(String)
+
+    def __init__(self, photo_message):
+        self.file_id = photo_message.file_id
+        self.access_hash = photo_message.access_hash
+        self.name = photo_message.name
+        self.file_size = photo_message.file_size
+        self.mime_type = photo_message.mime_type
+        self.thumb = photo_message.thumb
+        self.width = photo_message.width
+        self.height = photo_message.height
+        self.ext_height = photo_message.ext_height
+        self.ext_width = photo_message.ext_width
+        self.file_storage_version = photo_message.file_storage_version
+        self.caption_text = photo_message.caption_text.text
+        self.checksum = photo_message.checksum
+        self.algorithm = photo_message.algorithm
+
+

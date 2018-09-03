@@ -1,6 +1,6 @@
 
 class Debt:
-    def __init__(self, creditor_name, user_id, amount, date, card_number, payment_status):
+    def __init__(self, creditor_name, user_id, amount, date, card_number, payment_status, photo_id):
 
         self.user_id = user_id
         self.creditor_name = creditor_name
@@ -8,5 +8,4 @@ class Debt:
         self.date = date
         self.card_number = card_number
         self.payment_status = payment_status
-
-
+        self.photo_id = photo_id

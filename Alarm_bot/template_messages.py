@@ -22,3 +22,4 @@ class Message():
     GET_DEBT_DAY = TextMessage(" لطفا روز را وارد نمایید : ")
     DEBT_CREATION_SECCESS = TextMessage("بدهی ثبت شد .")
     STOP_MESSAGE_REPETIOTION = TextMessage("این پیام هشدار متعلق به یکی از هشدار های قبلیتان است . لطفا پیام دیگری وارد نمایید :")
+    GET_DEBT_PHOTO = TextMessage("یک عکس برای اعلان بدهی ارسال نمایید :")

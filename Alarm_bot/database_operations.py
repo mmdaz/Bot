@@ -1,7 +1,8 @@
-from Alarm_bot.DataBase import Alarm, Debt
+from Alarm_bot.DataBase import Alarm, Debt, Photo
 from Alarm_bot.base import session_factory
 import jdatetime
 from balebot.models.messages import TextMessage
+import xlsxwriter
 
 def save_alarm(alarm_from_bot):
     session = session_factory()
@@ -17,6 +18,13 @@ def save_debt(debt_from_bot):
     session.commit()
     session.close()
 
+
+def save_photo(photo_messaage):
+    session = session_factory()
+    photo = Photo(photo_messaage)
+    session.add(photo)
+    session.commit()
+    session.close()
 
 def get_all_alarms():
     session = session_factory()
@@ -95,4 +103,30 @@ def check_stop_message_repetition(user_id, stop_message):
         if alarm.stop_message == stop_message:
             return True
     return False
+
+
+def search_debt_for_send(current_time):
+
+    result = []
+
+    for debt in get_all_debts():
+        debt_time = debt.date.split(":")
+        if int(debt_time[0]) == current_time.year and int(debt_time[1]) == current_time.month and int(debt_time[2]) == current_time.day:
+            result.append(debt)
+
+    return result
+
+
+
+def get_photo_id(photo_message):
+    session = session_factory()
+    target_photo = session.query(Photo).filter_by(file_id=photo_message.file_id).first()
+    return target_photo.id
+
+def get_photo_by_id(id):
+    session = session_factory()
+    return session.query(Photo).filter_by(id=id).first()
+
+def create_exel_file(user_id):
+    payments = xlsxwriter.Workbook("/home/mmdni/{}-payments.xlsx".format(user_id))
 
