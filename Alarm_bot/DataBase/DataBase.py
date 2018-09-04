@@ -6,7 +6,7 @@ http://docs.sqlalchemy.org/en/latest/core/engines.html#database-urls
 """
 
 from sqlalchemy import *
-from Alarm_bot.base import Base
+from Alarm_bot.DataBase.base import Base
 
 class Alarm(Base):
     __tablename__ = 'alarms'

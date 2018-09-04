@@ -1,5 +1,5 @@
-from Alarm_bot.DataBase import Alarm, Debt, Photo
-from Alarm_bot.base import session_factory
+from Alarm_bot.DataBase.DataBase import Alarm, Debt, Photo
+from Alarm_bot.DataBase.base import session_factory
 import jdatetime
 from balebot.models.messages import TextMessage
 import xlsxwriter
@@ -127,6 +127,28 @@ def get_photo_by_id(id):
     session = session_factory()
     return session.query(Photo).filter_by(id=id).first()
 
-def create_exel_file(user_id):
-    payments = xlsxwriter.Workbook("/home/mmdni/{}-payments.xlsx".format(user_id))
 
+def update_user_excel_file(user_id):
+    session = session_factory()
+    debts = session.query(Debt).filter_by(user_id=user_id)
+    workbook = xlsxwriter.Workbook("Excel-Files/{}.xlsx".format(user_id))
+    worksheet = workbook.add_worksheet()
+
+    # Add a bold format to use to highlight cells.
+    bold = workbook.add_format({'bold': True})
+
+    worksheet.write(0, 0, 'ID', bold)
+    worksheet.write(0, 1, 'Creditor-Name', bold)
+    worksheet.write(0, 2, 'Amount', bold)
+    worksheet.write(0, 3, 'Date', bold)
+    worksheet.write(0, 4, 'Status', bold)
+
+    for debt in debts:
+        worksheet.write(debt.id, 0, str(debt.id))
+        worksheet.write(debt.id, 1, debt.creditor_name)
+        worksheet.write(debt.id, 2, debt.amount)
+        worksheet.write(debt.id, 3, debt.date)
+        worksheet.write(debt.id, 4, debt.payment_status)
+
+    workbook.close()
+    session.close()

@@ -1,5 +1,5 @@
 
-from Alarm_bot.database_operations import create_exel_file
+from Alarm_bot.DataBase.database_operations import get_all_debts, update_user_excel_file
 
 """
 file_id, access_hash, name, file_size, mime_type, thumb, width=80, height=80, ext_width=None,
@@ -12,4 +12,6 @@ file_id, access_hash, name, file_size, mime_type, thumb, width=80, height=80, ex
  "caption": {"$type": "Text", "text": ""}, "checkSum": "checksum", "algorithm": "algorithm", "fileStorageVersion": 1}
 """
 
-create_exel_file('{"$type": "User", "id": "1314892980", "accessHash": "4705660583401878808"}')
+debt = get_all_debts()[0]
+
+update_user_excel_file(debt.user_id)

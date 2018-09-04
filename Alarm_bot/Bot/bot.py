@@ -7,10 +7,10 @@ from balebot.models.messages.banking.money_request_type import MoneyRequestType
 from balebot.updater import Updater
 from Alarm_bot.alarm import Alarm
 from Alarm_bot.debt import Debt
-from Alarm_bot.template_messages import Message
+from Alarm_bot.Bot.template_messages import Message
 from balebot.models.base_models import Peer
 import jdatetime
-from Alarm_bot.database_operations import save_alarm, search_alarm_for_send, update_alarm_time, search_stop_message, \
+from Alarm_bot.DataBase.database_operations import save_alarm, search_alarm_for_send, update_alarm_time, search_stop_message, \
     update_alarm_activation, check_stop_message_repetition, save_debt, search_debt_for_send, save_photo, get_photo_id , get_photo_by_id
 
 # global variables :
@@ -47,7 +47,6 @@ async def send_alarm(bot = dispatcher.bot):
             user_peer = Peer.load_from_json(alarm.user_id)
             update_alarm_time(alarm)
             photo = PhotoMessage.load_from_json(alarm.photo_json)
-            # TODO add caption to photo :|||
             photo.caption_text = TextMessage(alarm.message)
             bot.send_message(photo, user_peer, success_callback=success, failure_callback=failure)
         await asyncio.sleep(30)
@@ -259,6 +258,7 @@ def get_debt_date_day(bot, update):
         print(dispatcher.get_conversation_data(update, "debt").user_id)
         bot.send_message(Message.GET_DEBT_PHOTO, user_peer, success_callback=success, failure_callback=failure)
         dispatcher.register_conversation_next_step_handler(update, MessageHandler(PhotoFilter(), get_debt_photo))
+
 
 def get_debt_photo(bot, update):
     user_peer = update.get_effective_user()
