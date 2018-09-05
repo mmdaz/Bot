@@ -12,6 +12,3 @@ file_id, access_hash, name, file_size, mime_type, thumb, width=80, height=80, ex
  "caption": {"$type": "Text", "text": ""}, "checkSum": "checksum", "algorithm": "algorithm", "fileStorageVersion": 1}
 """
 
-debt = get_all_debts()[0]
-
-update_user_excel_file(debt.user_id)
