@@ -134,6 +134,7 @@ def update_user_excel_file(user_id):
     workbook = xlsxwriter.Workbook("Excel-Files/{}.xlsx".format(user_id))
     worksheet = workbook.add_worksheet()
 
+
     # Add a bold format to use to highlight cells.
     bold = workbook.add_format({'bold': True})
 

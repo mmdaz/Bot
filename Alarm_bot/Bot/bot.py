@@ -1,7 +1,7 @@
 import asyncio
-from balebot.filters import TextFilter, PhotoFilter, DocumentFilter
+from balebot.filters import TextFilter, PhotoFilter
 from balebot.handlers import MessageHandler
-from balebot.models.messages import TextMessage, PhotoMessage, PurchaseMessage, DocumentMessage, BaseMessage
+from balebot.models.messages import TextMessage, PhotoMessage, PurchaseMessage, DocumentMessage
 from balebot.models.messages.banking.money_request_type import MoneyRequestType
 from balebot.updater import Updater
 from Alarm_bot.alarm import Alarm
@@ -10,7 +10,7 @@ from Alarm_bot.Bot.template_messages import Message
 from balebot.models.base_models import Peer
 import jdatetime
 from Alarm_bot.DataBase.database_operations import save_alarm, search_alarm_for_send, update_alarm_time, search_stop_message, \
-    update_alarm_activation, check_stop_message_repetition, save_debt, search_debt_for_send, save_photo, get_photo_id , get_photo_by_id
+    update_alarm_activation, check_stop_message_repetition, save_debt, search_debt_for_send, save_photo, get_photo_id , get_photo_by_id, update_user_excel_file
 
 
 
@@ -21,6 +21,7 @@ loop = asyncio.get_event_loop()
 updater =  Updater(token="63d52735b75ff858191152a038d746b956ef950e", loop=loop)
 dispatcher = updater.dispatcher
 
+users_dict = {}
 user = None
 
 def success(result):
@@ -32,7 +33,7 @@ def failure(result):
 
 
 
-def file_upload_success(result, user_data):
+def file_upload_success(result, user_data, a=1):
     print("u success : ", result)
     print(user_data)
 
@@ -40,12 +41,13 @@ def file_upload_success(result, user_data):
     user_id = user_data.get("user_id", None)
     url = user_data.get("url", None)
     dup = user_data.get("dup", None)
+    # dispatcher.set_conversation_data()
     print(user_id)
     print(file_id)
     print(url)
     print("during...")
-    messsage = DocumentMessage(file_id, user_id, "excel.xlsx",10,"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" )
-    dispatcher.bot.send_message(TextMessage("salam"),user,success_callback=success, failure_callback=failure)
+    messsage = DocumentMessage(file_id, user_id, "excel.xlsx", 10, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", caption_text=TextMessage("لیست پرداختی ها :::"))
+    dispatcher.bot.send_message(messsage,user,success_callback=success, failure_callback=failure)
 
 
 async def send_alarm(bot = dispatcher.bot):
@@ -203,8 +205,6 @@ def finish_creating_alarm(bot, update):
 
 
 
-
-
 @dispatcher.command_handler("/add_debt")
 def start_get_debt_conversation(bot, update):
     user_peer = update.get_effective_user()
@@ -237,6 +237,7 @@ def get_name_creditor(bot, update):
     dispatcher.get_conversation_data(update, "debt").creditor_name = creditor_name.text
     bot.send_message(Message.GET_DEBT_YEAR, user_peer, success_callback=success, failure_callback=failure)
     dispatcher.register_conversation_next_step_handler(update, MessageHandler(TextFilter(), get_debt_date_year))
+
 
 
 def get_debt_date_year(bot, update):
@@ -292,6 +293,7 @@ def get_debt_photo(bot, update):
 @dispatcher.command_handler("/get_report")
 def send_excel_report(bot, update):
     user_peer = update.get_effective_user()
+    update_user_excel_file(user_peer.get_json_str())
     global user
     user = user_peer
     print("before upload")
@@ -299,10 +301,6 @@ def send_excel_report(bot, update):
     print("after upload")
 
 
-@dispatcher.message_handler(DocumentFilter())
-def f(bot, update):
-    input = update.get_effective_message()
-    print(input.mime_type)
 
 @dispatcher.message_handler(TextFilter())
 def check_stop_message(bot, update):
