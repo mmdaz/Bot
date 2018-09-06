@@ -23,3 +23,5 @@ class Message():
     DEBT_CREATION_SECCESS = TextMessage("بدهی ثبت شد .")
     STOP_MESSAGE_REPETIOTION = TextMessage("این پیام هشدار متعلق به یکی از هشدار های قبلیتان است . لطفا پیام دیگری وارد نمایید :")
     GET_DEBT_PHOTO = TextMessage("یک عکس برای اعلان بدهی ارسال نمایید :")
+    BACK_TO_MAIN_MENU = TextMessage("بازگشت به منوی اصلی ...")
+    START_BOT_MESSAGE = TextMessage("سلام به بازوی هشدار خوش آمدید :) لطفا یکی از گزینه های زیر را انتخاب کنید ...")
