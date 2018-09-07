@@ -37,7 +37,7 @@ def failure(result):
 
 
 
-def file_upload_success(result, user_data, a=1):
+def file_upload_success(result, user_data):
     print("u success : ", result)
     print(user_data)
 
@@ -45,10 +45,6 @@ def file_upload_success(result, user_data, a=1):
     user_id = user_data.get("user_id", None)
     url = user_data.get("url", None)
     dup = user_data.get("dup", None)
-    # dispatcher.set_conversation_data()
-    print(user_id)
-    print(file_id)
-    print(url)
     print("during...")
     messsage = DocumentMessage(file_id, user_id, "excel.xlsx", 10, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", caption_text=TextMessage("لیست پرداختی ها :::"))
     dispatcher.bot.send_message(messsage,user,success_callback=success, failure_callback=failure)
@@ -57,7 +53,7 @@ def file_upload_success(result, user_data, a=1):
 async def send_alarm(bot = dispatcher.bot):
     while(True):
         current_time = jdatetime.datetime.now()
-        if current_time.hour == 20:
+        if current_time.hour == 21:
             for debt in search_debt_for_send(current_time):
                 user_peer = Peer.load_from_json(debt.user_id)
                 target_photo = get_photo_by_id(debt.photo_id)
@@ -66,6 +62,8 @@ async def send_alarm(bot = dispatcher.bot):
                 photo_message.caption_text = TextMessage(debt.creditor_name)
                 purchase_message = PurchaseMessage(photo_message, debt.card_number, debt.amount, MoneyRequestType.normal )
                 bot.send_message(purchase_message, user_peer, success_callback=success, failure_callback=failure)
+                bot.send_message(TemplateMessage(TextMessage("بازگشت به منوی اصلی "), btn_list=button_list), user_peer, success_callback=success, failure_callback=failure )
+
 
         for alarm in search_alarm_for_send(current_time):
             user_peer = Peer.load_from_json(alarm.user_id)
@@ -73,6 +71,9 @@ async def send_alarm(bot = dispatcher.bot):
             photo = PhotoMessage.load_from_json(alarm.photo_json)
             photo.caption_text = TextMessage(alarm.message)
             bot.send_message(photo, user_peer, success_callback=success, failure_callback=failure)
+            bot.send_message(TemplateMessage(TextMessage("بازگشت به منوی اصلی "), btn_list=button_list), user_peer, success_callback=success, failure_callback=failure)
+
+
         await asyncio.sleep(30)
 
 
@@ -85,6 +86,7 @@ def create_time(year, month, day, hour, minute):
 
 
 @dispatcher.command_handler("/start")
+@dispatcher.message_handler(TemplateResponseFilter(keywords=["/start"]))
 def start_bot(bot, update):
     user_peer = update.get_effective_user()
     btn_list = [
@@ -97,7 +99,9 @@ def start_bot(bot, update):
     dispatcher.register_conversation_next_step_handler(update, [
         MessageHandler(TemplateResponseFilter(keywords=["/create_alarm"]), start_creating_alarm),
         MessageHandler(TemplateResponseFilter(keywords=["/add_debt"]), start_get_debt_conversation),
-        MessageHandler(TemplateResponseFilter(keywords=["/get_excel"]), send_excel_report)
+        MessageHandler(TemplateResponseFilter(keywords=["/get_excel"]), send_excel_report),
+        MessageHandler(TextFilter(keywords=["/start"]), start_bot),
+        MessageHandler(TemplateResponseFilter(keywords=["/start"]), start_bot)
     ])
 
 
@@ -113,6 +117,7 @@ def start_creating_alarm(bot, update):
     bot.send_message(TemplateMessage(Message.GET_ALARM_NAME, button_list), user_peer, success_callback=success, failure_callback=failure)
     dispatcher.register_conversation_next_step_handler(update, [MessageHandler(TextFilter(), get_alarm_name),
                                                                 MessageHandler(TemplateResponseFilter(keywords="/start"), start_bot)])
+
 
 
 def get_alarm_name(bot, update):
@@ -238,7 +243,8 @@ def finish_creating_alarm(bot, update):
     dispatcher.get_conversation_data(update, "alarm").repeat_period = period.text
     save_alarm(dispatcher.get_conversation_data(update, "alarm"))
     bot.send_message(TemplateMessage(Message.ALARM_CREATION_SUCCESS, button_list), user_peer, success_callback=success, failure_callback=failure)
-    dispatcher.finish_conversation(update)
+    dispatcher.register_conversation_next_step_handler(MessageHandler(TemplateResponseFilter(keywords=["/start"]), start_bot))
+    # dispatcher.finish_conversation(update)
 
 
 
@@ -333,7 +339,8 @@ def get_debt_photo(bot, update):
     dispatcher.get_conversation_data(update,"debt").photo_id = get_photo_id(photo)
     save_debt(dispatcher.get_conversation_data(update, "debt"))
     bot.send_message(TemplateMessage(Message.DEBT_CREATION_SECCESS, button_list), user_peer, success_callback=success, failure_callback=failure)
-    dispatcher.finish_conversation(update)
+    dispatcher.register_conversation_next_step_handler(update, MessageHandler(TemplateResponseFilter(keywords="/start"), start_bot))
+    # dispatcher.finish_conversation(update)
 
 
 
@@ -353,9 +360,11 @@ def send_excel_report(bot, update):
 def check_stop_message(bot, update):
     user_peer = update.get_effective_user()
     input = update.get_effective_message()
+    print(input.text)
+    if input.text == "/start":
+        start_bot(bot, update)
     if search_stop_message(user_peer.get_json_str(), input.text):
         bot.send_message(update_alarm_activation(user_peer.get_json_str(), input.text), user_peer, success_callback=success, failure_callback=failure )
-
 
 
 asyncio.ensure_future(send_alarm())
