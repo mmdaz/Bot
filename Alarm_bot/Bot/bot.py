@@ -214,7 +214,7 @@ def get_date_hour(bot, update):
         dispatcher.register_conversation_next_step_handler(update, [MessageHandler(TextFilter(), get_date_hour),
                                                                     MessageHandler(TemplateResponseFilter(keywords="/start"), start_bot)])
     else:
-        bot.send_message(TemplateMessage(Message.INVALID_INPUT, button_list), user_peer, success_callback=success, failure_callback=failure)
+        bot.send_message(TemplateMessage(Message.GET_ALARM_MINUTE, button_list), user_peer, success_callback=success, failure_callback=failure)
         dispatcher.register_conversation_next_step_handler(update, [MessageHandler(TextFilter(), get_date_minute),
                                                                     MessageHandler(TemplateResponseFilter(keywords="/start"), start_bot)])
 
@@ -242,9 +242,9 @@ def finish_creating_alarm(bot, update):
     period = update.get_effective_message()
     dispatcher.get_conversation_data(update, "alarm").repeat_period = period.text
     save_alarm(dispatcher.get_conversation_data(update, "alarm"))
-    bot.send_message(TemplateMessage(Message.ALARM_CREATION_SUCCESS, button_list), user_peer, success_callback=success, failure_callback=failure)
-    dispatcher.register_conversation_next_step_handler(MessageHandler(TemplateResponseFilter(keywords=["/start"]), start_bot))
-    # dispatcher.finish_conversation(update)
+    bot.send_message(Message.ALARM_CREATION_SUCCESS, user_peer, success_callback=success, failure_callback=failure)
+    dispatcher.finish_conversation(update)
+    start_bot(bot, update)
 
 
 
@@ -337,10 +337,10 @@ def get_debt_photo(bot, update):
     photo = update.get_effective_message()
     save_photo(photo)
     dispatcher.get_conversation_data(update,"debt").photo_id = get_photo_id(photo)
-    save_debt(dispatcher.get_conversation_data(update, "debt"))
-    bot.send_message(TemplateMessage(Message.DEBT_CREATION_SECCESS, button_list), user_peer, success_callback=success, failure_callback=failure)
-    dispatcher.register_conversation_next_step_handler(update, MessageHandler(TemplateResponseFilter(keywords="/start"), start_bot))
-    # dispatcher.finish_conversation(update)
+    # save_debt(dispatcher.get_conversation_data(update, "debt"))
+    bot.send_message(Message.DEBT_CREATION_SECCESS, user_peer, success_callback=success, failure_callback=failure)
+    dispatcher.finish_conversation(update)
+    start_bot(bot, update)
 
 
 
@@ -361,10 +361,9 @@ def check_stop_message(bot, update):
     user_peer = update.get_effective_user()
     input = update.get_effective_message()
     print(input.text)
-    if input.text == "/start":
-        start_bot(bot, update)
     if search_stop_message(user_peer.get_json_str(), input.text):
         bot.send_message(update_alarm_activation(user_peer.get_json_str(), input.text), user_peer, success_callback=success, failure_callback=failure )
+        start_bot(bot, update)
 
 
 asyncio.ensure_future(send_alarm())
