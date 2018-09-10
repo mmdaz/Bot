@@ -41,6 +41,7 @@ def get_all_debts():
 
 
 def search_stop_message(user_id, input_message):
+    print("search")
     session = session_factory()
     for id , stop_message in session.query(Alarm.user_id, Alarm.stop_message):
         if id == user_id and stop_message == input_message:

@@ -89,6 +89,8 @@ def create_time(year, month, day, hour, minute):
 @dispatcher.message_handler(TemplateResponseFilter(keywords=["/start"]))
 def start_bot(bot, update):
     user_peer = update.get_effective_user()
+    input = update.get_effective_message()
+    print(input.text)
     btn_list = [
         TemplateMessageButton("ساختن هشدار جدید ", "/create_alarm", 0),
         TemplateMessageButton("اضافه کردن بدهی ", "/add_debt", 0),
@@ -243,8 +245,8 @@ def finish_creating_alarm(bot, update):
     dispatcher.get_conversation_data(update, "alarm").repeat_period = period.text
     save_alarm(dispatcher.get_conversation_data(update, "alarm"))
     bot.send_message(Message.ALARM_CREATION_SUCCESS, user_peer, success_callback=success, failure_callback=failure)
-    dispatcher.finish_conversation(update)
     start_bot(bot, update)
+    dispatcher.finish_conversation(update)
 
 
 
@@ -339,8 +341,8 @@ def get_debt_photo(bot, update):
     dispatcher.get_conversation_data(update,"debt").photo_id = get_photo_id(photo)
     # save_debt(dispatcher.get_conversation_data(update, "debt"))
     bot.send_message(Message.DEBT_CREATION_SECCESS, user_peer, success_callback=success, failure_callback=failure)
-    dispatcher.finish_conversation(update)
     start_bot(bot, update)
+    dispatcher.finish_conversation(update)
 
 
 
