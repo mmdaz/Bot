@@ -1,4 +1,4 @@
-from Alarm_bot.DataBase.DataBase import Alarm, Debt, Photo
+from Alarm_bot.DataBase.DataBase import DataBaseAlarm, DataBaseDebt, Photo
 from Alarm_bot.DataBase.base import session_factory
 import jdatetime
 from balebot.models.messages import TextMessage
@@ -6,14 +6,14 @@ import xlsxwriter
 
 def save_alarm(alarm_from_bot):
     session = session_factory()
-    alarm = Alarm(alarm_from_bot)
+    alarm = DataBaseAlarm(alarm_from_bot)
     session.add(alarm)
     session.commit()
     session.close()
 
 def save_debt(debt_from_bot):
     session = session_factory()
-    debt = Debt(debt_from_bot)
+    debt = DataBaseDebt(debt_from_bot)
     session.add(debt)
     session.commit()
     session.close()
@@ -28,14 +28,14 @@ def save_photo(photo_messaage):
 
 def get_all_alarms():
     session = session_factory()
-    alarm_query = session.query(Alarm)
+    alarm_query = session.query(DataBaseAlarm)
     session.expire_on_commit = False
     session.close()
     return alarm_query.all()
 
 def get_all_debts():
     session = session_factory()
-    debt_query = session.query(Debt)
+    debt_query = session.query(DataBaseDebt)
     session.close()
     return debt_query.all()
 
@@ -43,7 +43,7 @@ def get_all_debts():
 def search_stop_message(user_id, input_message):
     print("search")
     session = session_factory()
-    for id , stop_message in session.query(Alarm.user_id, Alarm.stop_message):
+    for id , stop_message in session.query(DataBaseAlarm.user_id, DataBaseAlarm.stop_message):
         if id == user_id and stop_message == input_message:
             return True
     return False
@@ -72,7 +72,7 @@ def search_alarm_for_send(current_time):
 
 def update_alarm_time(alarm):
     session = session_factory().object_session(alarm)
-    target_alarm = session.query(Alarm).filter_by(id=alarm.id).first()
+    target_alarm = session.query(DataBaseAlarm).filter_by(id=alarm.id).first()
     temp_time = target_alarm.start_time.split(":")
     date_time = jdatetime.datetime(int(temp_time[0]), int(temp_time[1]), int(temp_time[2]), int(temp_time[3]), int(temp_time[4]))
     date_time = date_time + jdatetime.timedelta(minutes=int(alarm.repeat_period))
@@ -83,7 +83,7 @@ def update_alarm_time(alarm):
 
 def update_alarm_activation(user_id, stop_message):
     session = session_factory()
-    target_alarm = session.query(Alarm).filter_by(user_id=user_id, stop_message=stop_message).first()
+    target_alarm = session.query(DataBaseAlarm).filter_by(user_id=user_id, stop_message=stop_message).first()
     session = session.object_session(target_alarm)
     deactive_message = TextMessage("هشدار {} متوقف شد .".format(target_alarm.name))
     if target_alarm.activation_status == "true":
@@ -99,7 +99,7 @@ def update_alarm_activation(user_id, stop_message):
 
 def check_stop_message_repetition(user_id, stop_message):
     session = session_factory()
-    target_alarms = session.query(Alarm).filter_by(user_id=user_id)
+    target_alarms = session.query(DataBaseAlarm).filter_by(user_id=user_id)
     for alarm in target_alarms:
         if alarm.stop_message == stop_message:
             return True
@@ -131,7 +131,7 @@ def get_photo_by_id(id):
 
 def update_user_excel_file(user_id):
     session = session_factory()
-    debts = session.query(Debt).filter_by(user_id=user_id)
+    debts = session.query(DataBaseDebt).filter_by(user_id=user_id)
     workbook = xlsxwriter.Workbook("Excel-Files/{}.xlsx".format(user_id))
     worksheet = workbook.add_worksheet()
 

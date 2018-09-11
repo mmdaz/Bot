@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import asyncio
 from balebot.filters import TextFilter, PhotoFilter, TemplateResponseFilter
 from balebot.handlers import MessageHandler
@@ -5,15 +6,13 @@ from balebot.models.messages import TextMessage, PhotoMessage, PurchaseMessage, 
     TemplateMessage
 from balebot.models.messages.banking.money_request_type import MoneyRequestType
 from balebot.updater import Updater
-from Alarm_bot.alarm import Alarm
-from Alarm_bot.debt import Debt
+from Alarm_bot.Bot.alarm import Alarm
+from Alarm_bot.Bot.debt import Debt
 from Alarm_bot.Bot.template_messages import Message
 from balebot.models.base_models import Peer
 import jdatetime
 from Alarm_bot.DataBase.database_operations import save_alarm, search_alarm_for_send, update_alarm_time, search_stop_message, \
-    update_alarm_activation, check_stop_message_repetition, save_debt, search_debt_for_send, save_photo, get_photo_id , get_photo_by_id, update_user_excel_file
-
-
+    update_alarm_activation, check_stop_message_repetition, search_debt_for_send, save_photo, get_photo_id , get_photo_by_id, update_user_excel_file
 
 
 # global variables :
