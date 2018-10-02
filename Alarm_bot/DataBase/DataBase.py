@@ -6,7 +6,7 @@ http://docs.sqlalchemy.org/en/latest/core/engines.html#database-urls
 """
 
 from sqlalchemy import *
-from Alarm_bot.DataBase.base import Base
+from DataBase.base import Base
 
 
 class DataBaseAlarm(Base):
@@ -101,5 +101,3 @@ class Photo(Base):
         self.caption_text = photo_message.caption_text.text
         self.checksum = photo_message.checksum
         self.algorithm = photo_message.algorithm
-
-

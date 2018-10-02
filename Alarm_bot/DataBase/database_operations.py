@@ -1,5 +1,5 @@
-from Alarm_bot.DataBase.DataBase import DataBaseAlarm, DataBaseDebt, Photo
-from Alarm_bot.DataBase.base import session_factory
+from DataBase.DataBase import DataBaseAlarm, DataBaseDebt, Photo
+from DataBase.base import session_factory
 import jdatetime
 from balebot.models.messages import TextMessage
 import xlsxwriter
