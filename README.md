@@ -1,6 +1,6 @@
 # Bot Developing tutorial and my experiences .
 
-This is my personal project to learn to bot developing and can be a simple tutorial.
+This is my personal project to learning of bot developing and can be a simple tutorial.
 
 
 ## Getting Started
@@ -11,7 +11,7 @@ I am a botdeveloper at Bale Messanger now and in this project I use balebot modu
 
 ### Prerequisites
 
-Fist you should install balebot module with pip :
+So you should install balebot module with pip :
 
 ```
 pip install balebot
