@@ -25,3 +25,6 @@ pip install sqlalchemy
 pip install ORM
 ```
 
+and also you should declare your bot in @botfather at Bale and get token of 
+it.
+
