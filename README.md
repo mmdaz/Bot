@@ -28,3 +28,14 @@ pip install ORM
 and also you should declare your bot in @botfather at Bale and get token of 
 it.
 
+After getting token lets start create a bot :)
+
+At fisrt we must create an updater object from balebot SDK:
+
+```
+from balebot.updater import Updater
+
+updater = Updater(token="our token")
+```
+The duty of Updater class is transfering updates between your bot and botserver.
+
